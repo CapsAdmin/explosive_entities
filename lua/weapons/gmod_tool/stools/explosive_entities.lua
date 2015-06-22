@@ -147,25 +147,24 @@ do -- effects
 					prt:SetEndSize(size * 4)
 					prt:SetAirResistance(200)
 					prt:SetRoll(R(-5, 5))
-					prt:VelocityDecay(true)
 					prt:SetLighting(true)
 					
 					prt = emt:Add(ee.GetMaterial("fire"), pos)
-					prt:SetVelocity(VectorRand() * size * 10) 		
-					prt:SetDieTime(0.3) 		 
+					prt:SetVelocity(VectorRand() * size * 50) 		
+					prt:SetDieTime(0.5) 		 
 					prt:SetStartAlpha(R(200, 255)) 
 					prt:SetEndAlpha(0) 	 
 					prt:SetStartSize(size) 
-					prt:SetEndSize(size * 2) 		 
+					prt:SetEndSize(size * 5) 		 
 					prt:SetRoll(R(-5, 5))
-					prt:SetAirResistance(400) 
+					prt:SetAirResistance(200) 
 					--prt:SetLighting(true)
 				end
 				
-				for i = 1, 300 do
+				for i = 1, 50 do
 					prt = emt:Add(ee.GetMaterial("smoke"), pos)
 					prt:SetVelocity(VectorRand() * 30 * size)
-					prt:SetDieTime(math.min((R(1, 3)*size) / 100, 3))
+					prt:SetDieTime(math.min((R(1, 3)*size) / 10, 3))
 					prt:SetStartAlpha(R(40, 100))
 					prt:SetEndAlpha(5)
 					prt:SetStartLength(size * 8)
@@ -174,36 +173,36 @@ do -- effects
 					prt:SetEndSize(size * 4)
 					prt:SetAirResistance(100)
 					prt:SetRoll(R(-5, 5))
-					prt:VelocityDecay(true)
 					prt:SetLighting(true)
-					prt:SetGravity(Vector(0, 0, -size))
+					prt:SetGravity(Vector(0, 0, 0))
 					prt:SetColor(255, 255, 255, 255)
 				end
 	
-				for i = 1, 50 do
+				for i = 1, 100 do
 					prt = emt:Add(ee.GetMaterial("smoke"), pos)
-					prt:SetVelocity(VectorRand() * 100 * size)
-					prt:SetDieTime(math.min((R(5, 10)*size) / 100, 15))
+					prt:SetVelocity(VectorRand() * 60 * size)
+					prt:SetDieTime(math.min((R(5, 10)*size) / 10, 15))
 					prt:SetStartAlpha(R(40, 100))
 					prt:SetEndAlpha(5)
 					prt:SetStartSize(size * 8)
 					prt:SetEndSize(size * 16)
 					prt:SetAirResistance(100)
 					prt:SetRoll(R(-5, 5))
-					prt:VelocityDecay(true)
 					prt:SetLighting(true)
 					prt:SetGravity(Vector(0, 0, size))
 					prt:SetColor(255, 255, 255, 255)
 				end
 			end
 
-			function ee.EmitHealthSmoke(pos, size, cur_hp, max_hp)
+			function ee.EmitHealthSmoke(pos, size, cur_hp, max_hp, vel)
 				size = math.max(size, 10)
 				
 				emt:SetPos(pos)
 				
+				vel = vel * 0.25
+				
 				prt = emt:Add(ee.GetMaterial("smoke"), pos)
-				prt:SetVelocity(VectorRand() * size)
+				prt:SetVelocity(vel + (VectorRand() * size))
 				prt:SetDieTime(R(5, 10))
 				prt:SetStartAlpha(math.abs((cur_hp / (max_hp / 4)) * 255 - 255))
 				prt:SetEndAlpha(0)
@@ -211,7 +210,6 @@ do -- effects
 				prt:SetEndSize(size * 4)
 				prt:SetAirResistance(200)
 				prt:SetRoll(R(-5, 5))
-				prt:VelocityDecay(true)
 				prt:SetLighting(true)
 			end
 			
@@ -221,31 +219,49 @@ do -- effects
 				local normal = (offset - ent:GetPos()):GetNormalized()
 				local size = math.Clamp((ent:BoundingRadius() + R(0, 20)) * ent.dt.size_mult, 5, 1000)
 				
+				local vel = ent:GetVelocity()
+				
+				local radius = ent:BoundingRadius()
+				local max = math.floor(math.min(1 + vel:Length()/20/radius, 10))
+				
 				emt:SetPos(offset)
+				
+				for i = max, 0, -1 do
+					i = (i / max) * 0.1
+				
+					local offset = offset - (vel * i)
+				
+					prt = emt:Add(ee.GetMaterial("fire"), offset)
+					prt:SetVelocity((normal * 1000 * ent.dt.size_mult) - vel)
+					prt:SetAirResistance(1000)
+					prt:SetDieTime(0.5)
+					prt:SetStartAlpha(255)
+					prt:SetEndAlpha(1)
+					prt:SetStartSize(size * R(0.75,1))
+					prt:SetEndSize(size * 2)
+					prt:SetRoll(R(-5, 5))
+					local r = math.Rand(200, 255)
+					prt:SetColor(255, r, r)
+					--prt:SetLighting(true)
 
-				prt = emt:Add(ee.GetMaterial("fire"), offset)
-				prt:SetVelocity((normal * 1000 * ent.dt.size_mult) - ent:GetVelocity())
-				prt:SetAirResistance(1000)
-				prt:SetDieTime(0.5)
-				prt:SetStartAlpha(255)
-				prt:SetEndAlpha(1)
-				prt:SetStartSize(size * R(0.75,1))
-				prt:SetEndSize(size * 2)
-				prt:SetRoll(R(-5, 5))
-				local r = math.Rand(200, 255)
-				prt:SetColor(255, r, r)
-				--prt:SetLighting(true)
-
-				prt = emt:Add(ee.GetMaterial("smoke"), offset - ent:GetVelocity() * 0.1)
-				prt:SetVelocity(normal * R(10, 20))
-				prt:SetDieTime(R(5, 20))
-				prt:SetStartAlpha(255)
-				prt:SetStartSize(size)
-				prt:SetEndSize(size * R(4,8))
-				prt:SetRoll(R(-5, 5))
-				local r = R(230, 255)
-				prt:SetColor(r,r,r)
-				prt:SetLighting(true)
+					prt = emt:Add(ee.GetMaterial("smoke"), offset - vel * 0.1)
+					prt:SetVelocity(normal * R(10, 20))
+					prt:SetStartAlpha(255)
+					prt:SetStartSize(size)
+					prt:SetEndSize(size * R(4,8))
+					prt:SetRoll(R(-5, 5))
+					
+					if math.random() > 0.75 then
+						local r,g,b = HSVToColor(R(0, 20), R(0.5, 0.75), 1)
+						prt:SetColor(r,g,b)
+						prt:SetDieTime(R(1, 2))
+					else
+						local r = R(230, 255)
+						prt:SetColor(r,r,r)
+						prt:SetDieTime(R(5, 20))
+					end
+					prt:SetLighting(true)
+				end
 			end
 		end
 		
@@ -255,7 +271,16 @@ do -- effects
 			for key, ent in pairs(ee.SmokingEntities) do
 				if ent:IsValid() then
 					if (ent.last_emit or 0) < RealTime() then
-						ee.EmitHealthSmoke(ent:GetPos(), ent:BoundingRadius(), ent:GetNWInt("ee_health"), ent.ee_max_hp or ent:BoundingRadius())
+						local vel = ent:GetVelocity()
+						
+						local radius = ent:BoundingRadius()
+						local max = math.floor(math.min(1 + vel:Length()/5/radius, 10))
+						
+						for i = max, 0, -1 do
+							i = (i / max) * 0.1
+							ee.EmitHealthSmoke(ent:GetPos() - (vel * i), radius, ent:GetNWInt("ee_health"), ent.ee_max_hp or ent:BoundingRadius(), vel)	
+						end
+						
 						ent.last_emit = RealTime() + 0.05
 					end
 				else
@@ -361,7 +386,7 @@ do -- debris entity
 			self:PhysicsInit(SOLID_VPHYSICS)
 			self:SetMoveType( MOVETYPE_VPHYSICS)   
 			self:SetSolid(SOLID_VPHYSICS)
-			
+			self:SetColor(Color(0,0,0,255))
 			local phys = self:GetPhysicsObject()
 			
 			if not phys:IsValid() then
@@ -373,7 +398,7 @@ do -- debris entity
 			phys:EnableCollisions(true)
 			phys:EnableDrag(false) 
 			phys:Wake()
-						
+
 			self:SetCollisionGroup(COLLISION_GROUP_INTERACTIVE_DEBRIS)
 			
 			self:Explode()
@@ -599,7 +624,20 @@ do -- tool
 				end
 			end
 			
-			for _, ent in pairs(entities) do
+			undo.Create("explosive_entities")
+			undo.SetPlayer(self:GetOwner())
+			undo.AddFunction(function() 
+				for _, ent in pairs(entities) do 
+					ee.UnmakeExplosive(ent)
+				end 
+			end)
+			local undo_tbl = undo.GetTable()
+			trace.Entity:CallOnRemove("explosive_entities", function() 
+				undo.Do_Undo(undo_tbl)
+			end)
+			undo.Finish()
+			
+			for _, ent in pairs(entities) do				
 				if self:GetClientNumber("health") == -1 then
 					health = ent:BoundingRadius() * self:GetClientNumber("health_mult")
 				end
@@ -609,18 +647,9 @@ do -- tool
 				for key, val in pairs(vars) do
 					config[val] = self:GetClientNumber(val)
 				end
-								
+
 				ee.MakeExplosive(ent, health, config)
 			end
-						
-			undo.Create("explosive_entities")
-				undo.SetPlayer(self:GetOwner())
-				undo.AddFunction(function() 
-					for _, ent in pairs(entities) do 
-						ee.UnmakeExplosive(ent)
-					end 
-				end)
-			undo.Finish()
 		end
 		
 		return true
